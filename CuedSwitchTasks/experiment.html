@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Cued switch tasks</title>
+    <!-- js插件 按需引入 -->
+    <script src="jspsych/jspsych.js"></script>
+    <script src="jspsych/plugin-html-keyboard-response.js"></script>
+    <script src="jspsych/plugin-image-slider-response.js"></script>
+    <script src="jspsych/plugin-image-keyboard-response.js"></script>
+    <script src="jspsych/plugin-html-slider-response.js"></script>
+    <script src="jspsych/plugin-html-button-response.js"></script>
+    <script src="jspsych/plugin-fullscreen.js"></script>
+    <script src="jspsych/plugin-instructions.js"></script>
+    <script src="jspsych/plugin-survey-multi-choice.js"></script>
+    <script src="jspsych/plugin-survey-html-form.js"></script>
+    <script src="jspsych/plugin-survey.js"></script>
+    <script src="jspsych/plugin-survey-text.js"></script>
+    <script src="jspsych/plugin-preload.js"></script>
+    <script src="jspsych/plugin-call-function.js"></script>
+
+    <link href="jspsych/jspsych.css" rel="stylesheet" type="text/css" />
+
+    <!-- 设置背景样式 -->
+    <style>
+        body {
+            background-color: black;
+            color: white;
+        }
+
+        .jspsych-display-element {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .text-prompt {
+            /* 调整图片与文字的间距 */
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .stimulus-image {
+            /* 根据需要调整图片大小 */
+            max-width: 80%;
+            max-height: 80%;
+        }
+    </style>
+
+    <script>
+        // 图片加载
+        var image = new Array()
+        function preload() {
+            for (i = 0; i < preload.arguments.length; i++) {
+                image[i] = new Image()
+                image[i].src = preload.arguments[i]
+            }
+        }
+        preload(
+            "img/greencir.png", "img/greentri.png", "img/introduction.jpg", "img/redcir.png", "img/redtri.png"
+        )
+    </script>
+</head>
+
+<body></body>
+<script>
+    /* initialize jsPsych */
+    const jsPsych = initJsPsych();
+
+    /*
+    // 在线部署实验使用下面代码
+    var jsPsych = initJsPsych({
+        on_finish: () => jatos.endStudy(jsPsych.data.get().csv())
+    });
+    */
+
+    // 定义试次数据
+    var trial_list = [{
+        type: 'html-keyboard-response',
+        stimulus: function() {
+            var trial_data = jsPsych.timelineVariable('trial_data');
+            return '<div class="text-prompt">' + trial_data.text_prompt + '</div>' +
+                    '<img class="stimulus-image" src="' + trial_data.stimulus + '">';
+        },
+        data: function() {
+            return {
+                trial_type: 'stim',
+                trial_index: jsPsych.timelineVariable('trial_index')
+            };
+        },
+        // 定义响应键 F/J
+        choices: ['F', 'J'], 
+        trial_duration: 2000, // 试次持续时间
+        on_finish: function(data) {
+            console.log('Trial data:', data);
+        }
+    }];
+
+    // 初始化加载项
+    var timeline = [];
+
+    // 进入实验，开始全屏模式
+    // 浏览器会自动弹出“按Esc键退出全屏”，设置delay_after为3000ms，让被试等那个消失再开始实验
+    var enter_fullscreen = {
+        type: jsPsychFullscreen,
+        fullscreen_mode: true,
+        message: '<p>实验开始前，请点击以下按钮进入全屏模式。</p>',
+        button_label: '进入全屏',
+        delay_after: 3000
+    }
+
+    // 实验开始欢迎语 
+    var instruction = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: "欢迎来到本实验，10秒后或按空格键开始实验",
+        choices: " ",
+        trial_duration: 10000,
+        response_end_trial: true
+    }
+
+    // 实验注意事项
+    var notice = {
+        type: jsPsychImageKeyboardResponse,
+        stimulus: 'img/introduction.jpg',
+        stimulus_height: 800,
+        // 保持图片的原始宽高比
+        preserve_aspect_ratio: true,
+        choices: ['q']
+    }
+
+    // 注视点+
+    var fixation = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: '<p style="font-weight;font-size:120px;bold;color:white;">+</p>',
+        trial_duration: 500,
+    }
+
+    // 空屏
+    var blank = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: ' ',
+        trial_duration: 500,
+    }
+
+    // 结束语
+    var end = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: "感谢您参与本次实验，10秒后或按空格键结束实验",
+        choices: " ",
+        trial_duration: 10000,
+        response_end_trial: true
+    }
+
+    var timeline_demographic = {
+        timeline: [
+            enter_fullscreen, instruction, notice, fixation, blank, end
+        ]
+    }
+
+    /* start the experiment */
+    timeline.push(timeline_demographic)
+    jsPsych.run(timeline)
+
+    /*
+    // 在线部署实验使用下面代码
+    jatos.onLoad(() => {
+        jatos.addAbortButton();
+        jsPsych.run(timeline);
+    });
+    */
+
+</script>
+
+</html>
