@@ -129,6 +129,7 @@
                         '<img class="stimulus-image" src="' + trial.stimulus + '">',
             // 定义响应键 F/J
             choices: ['F', 'J'], 
+            prompt: "<p>F键表示绿色或圆形，J键表示红色或三角形；字母相同为颜色判断，字母不同为形状判断。</p>",
             on_finish: function(data) {
                 console.log('Trial data:', data);
             }    
@@ -174,6 +175,7 @@
         stimulus: '<div class="text-prompt">C</div>' +
                     '<img class="stimulus-image" src="img/redtri.png">',
         choices: "NO_KEYS",
+        prompt: "<p>F键表示绿色或圆形，J键表示红色或三角形；字母相同为颜色判断，字母不同为形状判断。</p>",
         trial_duration: 2000,
     }
 
