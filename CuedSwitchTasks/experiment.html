@@ -6,18 +6,11 @@
     <!-- js插件 按需引入 -->
     <script src="jspsych/jspsych.js"></script>
     <script src="jspsych/plugin-html-keyboard-response.js"></script>
-    <script src="jspsych/plugin-image-slider-response.js"></script>
     <script src="jspsych/plugin-image-keyboard-response.js"></script>
-    <script src="jspsych/plugin-html-slider-response.js"></script>
     <script src="jspsych/plugin-html-button-response.js"></script>
+    <script src="jspsych/plugin-html-keyboard-response.js"></script>
     <script src="jspsych/plugin-fullscreen.js"></script>
     <script src="jspsych/plugin-instructions.js"></script>
-    <script src="jspsych/plugin-survey-multi-choice.js"></script>
-    <script src="jspsych/plugin-survey-html-form.js"></script>
-    <script src="jspsych/plugin-survey.js"></script>
-    <script src="jspsych/plugin-survey-text.js"></script>
-    <script src="jspsych/plugin-preload.js"></script>
-    <script src="jspsych/plugin-call-function.js"></script>
 
     <link href="jspsych/jspsych.css" rel="stylesheet" type="text/css" />
 
@@ -39,6 +32,7 @@
             /* 调整图片与文字的间距 */
             margin-bottom: 20px;
             text-align: center;
+            font-size: 64px;
         }
 
         .stimulus-image {
@@ -66,7 +60,21 @@
 <body></body>
 <script>
     /* initialize jsPsych */
-    const jsPsych = initJsPsych();
+    const jsPsych = initJsPsych({
+        // 实验结束时的回调函数
+        on_finish: function() {
+            var csvData = jsPsych.data.get().csv();
+            var blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+            var link = document.createElement('a');
+            var url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'data.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    })
 
     /*
     // 在线部署实验使用下面代码
@@ -76,29 +84,62 @@
     */
 
     // 定义试次数据
-    var trial_list = [{
-        type: 'html-keyboard-response',
-        stimulus: function() {
-            var trial_data = jsPsych.timelineVariable('trial_data');
-            return '<div class="text-prompt">' + trial_data.text_prompt + '</div>' +
-                    '<img class="stimulus-image" src="' + trial_data.stimulus + '">';
-        },
-        data: function() {
-            return {
-                trial_type: 'stim',
-                trial_index: jsPsych.timelineVariable('trial_index')
-            };
-        },
-        // 定义响应键 F/J
-        choices: ['F', 'J'], 
-        trial_duration: 2000, // 试次持续时间
-        on_finish: function(data) {
-            console.log('Trial data:', data);
+    var trial_list = []
+
+    // 定义试次参数
+    var trials = [
+        {stimulus: "img/redtri.png", text_prompt: "C"},
+        {stimulus: "img/redcir.png", text_prompt: "C"},
+        {stimulus: "img/greentri.png", text_prompt: "C"},
+        {stimulus: "img/greencir.png", text_prompt: "C"},
+        {stimulus: "img/redtri.png", text_prompt: "S"},
+        {stimulus: "img/redcir.png", text_prompt: "S"},
+        {stimulus: "img/greentri.png", text_prompt: "S"},
+        {stimulus: "img/greencir.png", text_prompt: "S"}
+    ]
+
+    // 定义重复次数
+    var num_repetitions = 4; 
+    trials = trials.flatMap(function(trial) {
+        let trials_array = [];
+        for (let i = 0; i < num_repetitions; i++) {
+            trials_array.push({
+                stimulus: trial.stimulus,
+                text_prompt: trial.text_prompt
+            })
         }
-    }];
+        return trials_array
+    })
+    // 重复试次和随机化试次顺序
+    trials = jsPsych.randomization.shuffle(trials)
+
+    // 空屏
+    var blank = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: ' ',
+        choices: "NO_KEYS",
+        trial_duration: 500,
+    }
+
+    // 将试次参数转换为试次
+    trials.forEach(function(trial) {
+        let trial_object = {
+            type: jsPsychHtmlKeyboardResponse,
+            stimulus: '<div class="text-prompt">' + trial.text_prompt + '</div>' +
+                        '<img class="stimulus-image" src="' + trial.stimulus + '">',
+            // 定义响应键 F/J
+            choices: ['F', 'J'], 
+            on_finish: function(data) {
+                console.log('Trial data:', data);
+            }    
+        };
+        // 每次试验前黑屏
+        trial_list.push(blank);
+        trial_list.push(trial_object);
+    })
 
     // 初始化加载项
-    var timeline = [];
+    var timeline = []
 
     // 进入实验，开始全屏模式
     // 浏览器会自动弹出“按Esc键退出全屏”，设置delay_after为3000ms，让被试等那个消失再开始实验
@@ -112,15 +153,6 @@
 
     // 实验开始欢迎语 
     var instruction = {
-        type: jsPsychHtmlKeyboardResponse,
-        stimulus: "欢迎来到本实验，10秒后或按空格键开始实验",
-        choices: " ",
-        trial_duration: 10000,
-        response_end_trial: true
-    }
-
-    // 实验注意事项
-    var notice = {
         type: jsPsychImageKeyboardResponse,
         stimulus: 'img/introduction.jpg',
         stimulus_height: 800,
@@ -136,30 +168,30 @@
         trial_duration: 500,
     }
 
-    // 空屏
-    var blank = {
-        type: jsPsychHtmlKeyboardResponse,
-        stimulus: ' ',
-        trial_duration: 500,
-    }
-
     // 结束语
     var end = {
         type: jsPsychHtmlKeyboardResponse,
-        stimulus: "感谢您参与本次实验，10秒后或按空格键结束实验",
-        choices: " ",
-        trial_duration: 10000,
+        stimulus: "实验结束，您辛苦了！",
+        choices: "NO_KEYS",
+        trial_duration: 3000,
         response_end_trial: true
     }
 
-    var timeline_demographic = {
-        timeline: [
-            enter_fullscreen, instruction, notice, fixation, blank, end
-        ]
-    }
+    // 将节点添加到timeline数组中
+    timeline.push(enter_fullscreen)
+    timeline.push(instruction)
+    timeline.push(fixation)
+    timeline.push(blank)
+
+    // 将trial_list数组中的每个元素添加到timeline数组中
+    trial_list.forEach(function(trial) {
+        timeline.push(trial)
+        console.log(trial)
+    })
+
+    timeline.push(end)
 
     /* start the experiment */
-    timeline.push(timeline_demographic)
     jsPsych.run(timeline)
 
     /*
