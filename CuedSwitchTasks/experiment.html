@@ -42,7 +42,7 @@
             /* 调整图片与文字的间距 */
             margin-bottom: 20px;
             text-align: center;
-            font-size: 20px;
+            font-size: 64px;
         }
 
         .stimulus-image {
@@ -98,31 +98,38 @@
 
     // 定义试次参数
     var trials = [
-        {stimulus: "img/redtri.png", text_prompt: "C", trial_index: 0},
-        {stimulus: "img/redcir.png", text_prompt: "C", trial_index: 0},
-        {stimulus: "img/greentri.png", text_prompt: "C", trial_index: 0},
-        {stimulus: "img/greencir.png", text_prompt: "C", trial_index: 0},
-        {stimulus: "img/redtri.png", text_prompt: "S", trial_index: 0},
-        {stimulus: "img/redcir.png", text_prompt: "S", trial_index: 0},
-        {stimulus: "img/greentri.png", text_prompt: "S", trial_index: 0},
-        {stimulus: "img/greencir.png", text_prompt: "S", trial_index: 0}
+        {stimulus: "img/redtri.png", text_prompt: "C"},
+        {stimulus: "img/redcir.png", text_prompt: "C"},
+        {stimulus: "img/greentri.png", text_prompt: "C"},
+        {stimulus: "img/greencir.png", text_prompt: "C"},
+        {stimulus: "img/redtri.png", text_prompt: "S"},
+        {stimulus: "img/redcir.png", text_prompt: "S"},
+        {stimulus: "img/greentri.png", text_prompt: "S"},
+        {stimulus: "img/greencir.png", text_prompt: "S"}
     ]
 
-    // 重复试次和随机化试次顺序
     // 定义重复次数
     var num_repetitions = 4; 
-    trials = trials.flatMap(function(trial, index) {
-        var trials_array = [];
-        for (var i = 0; i < num_repetitions; i++) {
+    trials = trials.flatMap(function(trial) {
+        let trials_array = [];
+        for (let i = 0; i < num_repetitions; i++) {
             trials_array.push({
                 stimulus: trial.stimulus,
-                text_prompt: trial.text_prompt,
-                trial_index: index
+                text_prompt: trial.text_prompt
             })
         }
         return trials_array
     })
+    // 重复试次和随机化试次顺序
     trials = jsPsych.randomization.shuffle(trials)
+
+    // 空屏
+    var blank = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: ' ',
+        choices: "NO_KEYS",
+        trial_duration: 500,
+    }
 
     // 将试次参数转换为试次
     trials.forEach(function(trial) {
@@ -130,23 +137,14 @@
             type: jsPsychHtmlKeyboardResponse,
             stimulus: '<div class="text-prompt">' + trial.text_prompt + '</div>' +
                         '<img class="stimulus-image" src="' + trial.stimulus + '">',
-            data: function() {
-                return {
-                    trial_type: 'stim',
-                    trial_index: trial.trial_index
-                };
-            },
             // 定义响应键 F/J
             choices: ['F', 'J'], 
-            // 试次持续时间
-            trial_duration: 2000, 
-            prompt: "<p>F键表示绿色或圆形，J键表示红色或三角形。当你看到当前的字母与上一次呈现的字母相同时，则对当前图案进行颜色判断；字母不同时，则对当前图案进行形状判断。</p>",
             on_finish: function(data) {
                 console.log('Trial data:', data);
-                // 确保响应数据被添加到试验数据中
-                data.response = this.response;
             }    
         };
+        // 每次试验前黑屏
+        trial_list.push(blank);
         trial_list.push(trial_object);
     })
 
@@ -165,15 +163,6 @@
 
     // 实验开始欢迎语 
     var instruction = {
-        type: jsPsychHtmlKeyboardResponse,
-        stimulus: "欢迎来到本实验，10秒后或按空格键开始实验",
-        choices: " ",
-        trial_duration: 10000,
-        response_end_trial: true
-    }
-
-    // 实验注意事项
-    var notice = {
         type: jsPsychImageKeyboardResponse,
         stimulus: 'img/introduction.jpg',
         stimulus_height: 800,
@@ -189,26 +178,18 @@
         trial_duration: 500,
     }
 
-    // 空屏
-    var blank = {
-        type: jsPsychHtmlKeyboardResponse,
-        stimulus: ' ',
-        trial_duration: 500,
-    }
-
     // 结束语
     var end = {
         type: jsPsychHtmlKeyboardResponse,
-        stimulus: "感谢您参与本次实验，10秒后或按空格键结束实验",
-        choices: " ",
-        trial_duration: 10000,
+        stimulus: "实验结束，您辛苦了！",
+        choices: "NO_KEYS",
+        trial_duration: 3000,
         response_end_trial: true
     }
 
     // 将节点添加到timeline数组中
     timeline.push(enter_fullscreen)
     timeline.push(instruction)
-    timeline.push(notice)
     timeline.push(fixation)
     timeline.push(blank)
 
