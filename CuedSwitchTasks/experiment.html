@@ -168,10 +168,19 @@
         trial_duration: 500,
     }
 
+    // 参照图案
+    var reference = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: '<div class="text-prompt">C</div>' +
+                    '<img class="stimulus-image" src="img/redtri.png">',
+        choices: "NO_KEYS",
+        trial_duration: 2000,
+    }
+
     // 结束语
     var end = {
         type: jsPsychHtmlKeyboardResponse,
-        stimulus: "实验结束，您辛苦了！",
+        stimulus: '<p style="font-weight;font-size:60px;bold;color:white;">实验结束，您辛苦了！</p>',
         choices: "NO_KEYS",
         trial_duration: 3000,
         response_end_trial: true
@@ -181,6 +190,8 @@
     timeline.push(enter_fullscreen)
     timeline.push(instruction)
     timeline.push(fixation)
+    timeline.push(blank)
+    timeline.push(reference)
     timeline.push(blank)
 
     // 将trial_list数组中的每个元素添加到timeline数组中
